@@ -1,7 +1,16 @@
-serve
+# serve
 
-Serve file from the current directory over HTTP.
+Serve files from the current directory over HTTP.
 
+## Install
+
+```
+go install github.com/hmarr/serve
+```
+
+## Use
+
+```
 $ serve -h
 Usage: ./serve [opts] [directory]
   -port int
@@ -11,3 +20,4 @@ Usage: ./serve [opts] [directory]
 $ serve
 🚀  Listening on http://127.0.0.1:8000/
 2019/03/05 11:59:44 GET /README
+```
