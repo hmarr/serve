@@ -17,8 +17,10 @@ func main() {
 	}
 	var port int
 	var public bool
+	var corsAllow string
 	flag.IntVar(&port, "port", 8000, "the port of http file server")
 	flag.BoolVar(&public, "public", false, "listen on all interfaces")
+	flag.StringVar(&corsAllow, "cors-allow", "", "origins to permit via cors")
 	flag.Parse()
 
 	host := "127.0.0.1"
@@ -31,21 +33,25 @@ func main() {
 		panic(err)
 	}
 
-	startServer(host, port, wd)
+	startServer(host, port, corsAllow, wd)
 }
 
 type fileServer struct {
-	root string
+	root      string
+	corsAllow string
 }
 
 func (s *fileServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s\n", r.Method, r.URL.String())
 
 	path := filepath.Join(s.root, r.URL.Path)
+	if s.corsAllow != "" {
+		w.Header().Add("access-control-allow-origin", s.corsAllow)
+	}
 	http.ServeFile(w, r, path)
 }
 
-func startServer(host string, port int, wd string) error {
+func startServer(host string, port int, corsAllow, wd string) error {
 	for {
 		bindAddr := fmt.Sprintf("%s:%d", host, port)
 		listener, err := net.Listen("tcp", bindAddr)
@@ -59,7 +65,8 @@ func startServer(host string, port int, wd string) error {
 		}
 
 		fmt.Printf("🚀  Listening on http://%s/\n", bindAddr)
-		if err = http.Serve(listener, &fileServer{root: wd}); err != nil {
+		srv := &fileServer{root: wd, corsAllow: corsAllow}
+		if err = http.Serve(listener, srv); err != nil {
 			return err
 		}
 		return nil
