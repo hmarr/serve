@@ -7,7 +7,9 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 func main() {
@@ -18,9 +20,11 @@ func main() {
 	var port int
 	var public bool
 	var corsAllow string
+	var open bool
 	flag.IntVar(&port, "port", 8000, "the port of http file server")
 	flag.BoolVar(&public, "public", false, "listen on all interfaces")
 	flag.StringVar(&corsAllow, "cors-allow", "", "origins to permit via cors")
+	flag.BoolVar(&open, "open", false, "open in web browser")
 	flag.Parse()
 
 	host := "127.0.0.1"
@@ -33,7 +37,21 @@ func main() {
 		panic(err)
 	}
 
-	startServer(host, port, corsAllow, wd)
+	done := make(chan struct{})
+	go func() {
+		startServer(host, port, corsAllow, wd)
+		done <- struct{}{}
+	}()
+
+	if open {
+		time.Sleep(100 * time.Millisecond)
+		cmd := exec.Command("open", fmt.Sprintf("http://127.0.0.1:%d", port))
+		if err := cmd.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	<-done
 }
 
 type fileServer struct {
