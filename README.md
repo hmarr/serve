@@ -13,6 +13,10 @@ go install github.com/hmarr/serve
 ```
 $ serve -h
 Usage: ./serve [opts] [directory]
+  -cors-allow string
+    	origins to permit via cors
+  -open
+    	open in web browser
   -port int
     	the port of http file server (default 8000)
   -public
